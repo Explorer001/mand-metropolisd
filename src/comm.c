@@ -1408,7 +1408,8 @@ report_system_monitoring_info(DMCONTEXT *dmCtx, bool report_total)
 {
 	struct sysinfo info;
 	uint64_t si_total, si_free;
-	uint32_t mem_used, mem_total, mem_free_perc, loads[3], rc;
+	uint32_t mem_used, mem_total, mem_free_perc, rc;
+	double loads[3];
 
 	if (sysinfo(&info) != 0) {
 		logx(LOG_WARNING, "Failed to read sysinfo: %s.",
@@ -1428,7 +1429,7 @@ report_system_monitoring_info(DMCONTEXT *dmCtx, bool report_total)
 	mem_free_perc = htonl(mem_free_perc);
 
 	for (int i = 0; i < 3; i++)
-		loads[i] = htonl((uint32_t) info.loads[i] * 100 / (1 << SI_LOAD_SHIFT));
+		loads[i] = (double) info.loads[i] / (1 << SI_LOAD_SHIFT);
 
 	struct rpc_db_set_path_value set_values[] = {
 		{
@@ -1452,7 +1453,7 @@ report_system_monitoring_info(DMCONTEXT *dmCtx, bool report_total)
 		{
 			.path  = "metropolis.cpu.load-average-1",
 			.value = {
-				.code = AVP_UINT32,
+				.code = AVP_UNKNOWN,
 				.vendor_id = VP_TRAVELPING,
 				.data = &loads[0],
 				.size = sizeof(loads[0])
@@ -1461,7 +1462,7 @@ report_system_monitoring_info(DMCONTEXT *dmCtx, bool report_total)
 		{
 			.path  = "metropolis.cpu.load-average-5",
 			.value = {
-				.code = AVP_UINT32,
+				.code = AVP_UNKNOWN,
 				.vendor_id = VP_TRAVELPING,
 				.data = &loads[1],
 				.size = sizeof(loads[1])
@@ -1470,7 +1471,7 @@ report_system_monitoring_info(DMCONTEXT *dmCtx, bool report_total)
 		{
 			.path  = "metropolis.cpu.load-average-15",
 			.value = {
-				.code = AVP_UINT32,
+				.code = AVP_UNKNOWN,
 				.vendor_id = VP_TRAVELPING,
 				.data = &loads[2],
 				.size = sizeof(loads[2])
